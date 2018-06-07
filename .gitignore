@@ -105,3 +105,6 @@ venv.bak/
 
 # vscode config
 .vscode/
+
+#pylint
+.pylintrc
