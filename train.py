@@ -2,7 +2,7 @@ import gym
 import pandas as pd
 import argparse
 
-from config import MEMORY_CAPACITY, EPISODE_NUM
+from config import MEMORY_CAPACITY, TRAIN_EPISODE_NUM
 from brain import QLearningTable, SarsaTable, DQN
 
 def newReward(obsesrvation, obsesrvation_):
@@ -10,7 +10,7 @@ def newReward(obsesrvation, obsesrvation_):
 
 def update(method):
     records = []
-    for episode in range(EPISODE_NUM):
+    for episode in range(TRAIN_EPISODE_NUM):
         # initial
         observation = env.reset()
 
@@ -42,7 +42,7 @@ def update(method):
                 RL.learn(str(observation), action, reward, str(observation_), action_)
                 # swap action
                 action = action_
-            if method == 'DQN':
+            elif method == 'DQN':
                 # RL choose action based on observation
                 action = RL.choose_action(observation)
                 # RL take action and get next observation and reward
@@ -70,8 +70,13 @@ def update(method):
     print('game over')
     env.close()
 
+    # save model
+    if method == 'DQN':
+        RL.save_model()
+        print("save model")
+
     df = pd.DataFrame(records, columns=["iters", "reward"])
-    df.to_csv(method + ".csv", index=False)
+    df.to_csv("data/{}_{}_{}_{}.csv".format(method, RL.lr, RL.gamma, RL.epsilon), index=False)
 
 if __name__ == "__main__":
 
@@ -80,6 +85,15 @@ if __name__ == "__main__":
     parse.add_argument('-m', '--method',
                         default='DQN',
                         help='Choose which rl algorithm used (QL, SARSA, or DQN)')
+    parse.add_argument('-lr', '--learning_rate',
+                        type=float, default=0.01,
+                        help='Learning rate')
+    parse.add_argument('-rd', '--reward_decay',
+                        type=float, default=0.9,
+                        help='Reward decay')
+    parse.add_argument('-e', '--e_greedy',
+                        type=float, default=0.9,
+                        help='Epsilon greedy')
     args = parse.parse_args()
 
     # env setup
@@ -91,20 +105,24 @@ if __name__ == "__main__":
     if method == 'QL':
         print("Use Q-Learning...")
         print('--------------------------------')
-        RL = QLearningTable(actions=list(range(env.action_space.n)))
+        RL = QLearningTable(actions=list(range(env.action_space.n)),
+                            learning_rate=args.learning_rate, reward_decay=args.reward_decay, e_greedy=args.e_greedy)
     elif method == 'SARSA':
         print("Use SARSA...")
         print('--------------------------------')
-        RL = SarsaTable(actions=list(range(env.action_space.n)))
+        RL = SarsaTable(actions=list(range(env.action_space.n)),
+                        learning_rate=args.learning_rate, reward_decay=args.reward_decay, e_greedy=args.e_greedy)
     elif method == 'DQN':
         print("Use DQN...")
         print('--------------------------------')
         env_shape = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape  # to confirm the shape
-        RL = DQN(action_n=env.action_space.n, state_n=env.observation_space.shape[0], env_shape=env_shape)
+        RL = DQN(action_n=env.action_space.n, state_n=env.observation_space.shape[0], env_shape=env_shape,
+                learning_rate=args.learning_rate, reward_decay=args.reward_decay, e_greedy=args.e_greedy)
     else:
         print("Error method! Use DQN instead.")
         print('--------------------------------')
         env_shape = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape  # to confirm the shape
-        RL = DQN(action_n=env.action_space.n, state_n=env.observation_space.shape[0], env_shape=env_shape)
+        RL = DQN(action_n=env.action_space.n, state_n=env.observation_space.shape[0], env_shape=env_shape,
+                learning_rate=args.learning_rate, reward_decay=args.reward_decay, e_greedy=args.e_greedy)
 
     update(method)

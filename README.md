@@ -11,3 +11,7 @@
 - How to use OpenAI gym to do RL research
 - How to implement RL algorithms
 - How to evaluate your algorithms
+
+## Method
+- DQN
+- Reward function

@@ -146,3 +146,10 @@ class DQN(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+    
+    def save_model(self):
+        torch.save(self.eval_net.state_dict(), 'model/DQN/eval_{}_{}_{}.pkl'.format(self.lr, self.gamma, self.epsilon))
+        torch.save(self.target_net.state_dict(), 'model/DQN/target_{}_{}_{}.pkl'.format(self.lr, self.gamma, self.epsilon))
+
+    def load_model(self, model_name):
+        self.eval_net.load_state_dict(torch.load(model_name))
