@@ -49,9 +49,13 @@ optional arguments:
 ## Result
 > Use `plot.py` to plot the learning curve.
 - learning curve (steps)
-![leanring curve (steps)](https://github.com/HaoTse/mountain-car-v0/blob/img/steps.png)
+
+![leanring curve (steps)](https://github.com/HaoTse/mountain-car-v0/blob/master/img/steps.png)
+
 - learning curve (rewards)
-![leanring curve (rewards)](https://github.com/HaoTse/mountain-car-v0/blob/img/rewards.png)
+
+![leanring curve (rewards)](https://github.com/HaoTse/mountain-car-v0/blob/master/img/rewards.png)
+
 - After 10 episode, the average step is 152.9, and the average reward is 58.8.
 
 ## Analysis
