@@ -4,14 +4,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from config import BATCH_SIZE, TARGET_REPLACE_ITER, MEMORY_CAPACITY
+from config import BATCH_SIZE, TARGET_REPLACE_ITER, MEMORY_CAPACITY, E_GREEDY
 
 class RL(object):
-    def __init__(self, action_space, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
+    def __init__(self, action_space, learning_rate=0.01, reward_decay=0.9):
         self.actions = action_space  # a list
         self.lr = learning_rate
         self.gamma = reward_decay
-        self.epsilon = e_greedy
+        self.epsilon = E_GREEDY
 
         self.q_table = pd.DataFrame(columns=self.actions, dtype=np.float64)
 
@@ -45,8 +45,8 @@ class RL(object):
 
 # off-policy
 class QLearningTable(RL):
-    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
-        super(QLearningTable, self).__init__(actions, learning_rate, reward_decay, e_greedy)
+    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9):
+        super(QLearningTable, self).__init__(actions, learning_rate, reward_decay, E_GREEDY)
 
     def learn(self, s, a, r, s_):
         self.check_state_exist(s_)
@@ -60,8 +60,8 @@ class QLearningTable(RL):
 # on-policy
 class SarsaTable(RL):
 
-    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
-        super(SarsaTable, self).__init__(actions, learning_rate, reward_decay, e_greedy)
+    def __init__(self, actions, learning_rate=0.01, reward_decay=0.9):
+        super(SarsaTable, self).__init__(actions, learning_rate, reward_decay, E_GREEDY)
 
     def learn(self, s, a, r, s_, a_):
         self.check_state_exist(s_)
@@ -88,14 +88,14 @@ class Net(nn.Module):
         return actions_value
 
 class DQN(object):
-    def __init__(self, action_n, state_n, env_shape, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
+    def __init__(self, action_n, state_n, env_shape, learning_rate=0.01, reward_decay=0.9):
         self.eval_net, self.target_net = Net(action_n=action_n, state_n=state_n), Net(action_n=action_n, state_n=state_n)
 
         self.action_n = action_n
         self.state_n = state_n
         self.lr = learning_rate
         self.gamma = reward_decay
-        self.epsilon = e_greedy
+        self.epsilon = E_GREEDY
         self.env_shape = env_shape
 
         self.learn_step_counter = 0  # for target updating
@@ -148,8 +148,8 @@ class DQN(object):
         self.optimizer.step()
     
     def save_model(self):
-        torch.save(self.eval_net.state_dict(), 'model/DQN/eval_{}_{}_{}.pkl'.format(self.lr, self.gamma, self.epsilon))
-        torch.save(self.target_net.state_dict(), 'model/DQN/target_{}_{}_{}.pkl'.format(self.lr, self.gamma, self.epsilon))
+        torch.save(self.eval_net.state_dict(), 'model/DQN/eval_{}_{}_{}.pkl'.format(self.lr, self.epsilon, BATCH_SIZE))
+        torch.save(self.target_net.state_dict(), 'model/DQN/target_{}_{}_{}.pkl'.format(self.lr, self.epsilon, BATCH_SIZE))
 
     def load_model(self, model_name):
         self.eval_net.load_state_dict(torch.load(model_name))

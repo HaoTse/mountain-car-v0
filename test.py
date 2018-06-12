@@ -2,7 +2,7 @@ import gym
 import pandas as pd
 import argparse
 
-from config import MEMORY_CAPACITY, TEST_EPISODE_NUM
+from config import MEMORY_CAPACITY, TEST_EPISODE_NUM, BATCH_SIZE, E_GREEDY
 from brain import DQN
 
 def newReward(obsesrvation, obsesrvation_):
@@ -60,7 +60,7 @@ if __name__ == "__main__":
                         default='DQN',
                         help='Choose which rl algorithm used (DQN)')
     parse.add_argument('-t', '--test',
-                        default='model/DQN/eval_0.01_0.9_0.9.pkl',
+                        default='model/DQN/eval_0.01_{}_{}.pkl'.format(E_GREEDY, BATCH_SIZE),
                         help='The test model path')
     args = parse.parse_args()
 

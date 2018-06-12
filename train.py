@@ -2,7 +2,7 @@ import gym
 import pandas as pd
 import argparse
 
-from config import MEMORY_CAPACITY, TRAIN_EPISODE_NUM
+from config import MEMORY_CAPACITY, TRAIN_EPISODE_NUM, BATCH_SIZE, E_GREEDY
 from brain import QLearningTable, SarsaTable, DQN
 
 def newReward(obsesrvation, obsesrvation_):
@@ -76,7 +76,7 @@ def update(method):
         print("save model")
 
     df = pd.DataFrame(records, columns=["iters", "reward"])
-    df.to_csv("data/{}_{}_{}_{}.csv".format(method, RL.lr, RL.gamma, RL.epsilon), index=False)
+    df.to_csv("data/{}_{}_{}_{}.csv".format(method, RL.lr, E_GREEDY, BATCH_SIZE), index=False)
 
 if __name__ == "__main__":
 
@@ -91,9 +91,6 @@ if __name__ == "__main__":
     parse.add_argument('-rd', '--reward_decay',
                         type=float, default=0.9,
                         help='Reward decay')
-    parse.add_argument('-e', '--e_greedy',
-                        type=float, default=0.9,
-                        help='Epsilon greedy')
     args = parse.parse_args()
 
     # env setup
@@ -106,23 +103,23 @@ if __name__ == "__main__":
         print("Use Q-Learning...")
         print('--------------------------------')
         RL = QLearningTable(actions=list(range(env.action_space.n)),
-                            learning_rate=args.learning_rate, reward_decay=args.reward_decay, e_greedy=args.e_greedy)
+                            learning_rate=args.learning_rate, reward_decay=args.reward_decay)
     elif method == 'SARSA':
         print("Use SARSA...")
         print('--------------------------------')
         RL = SarsaTable(actions=list(range(env.action_space.n)),
-                        learning_rate=args.learning_rate, reward_decay=args.reward_decay, e_greedy=args.e_greedy)
+                        learning_rate=args.learning_rate, reward_decay=args.reward_decay)
     elif method == 'DQN':
         print("Use DQN...")
         print('--------------------------------')
         env_shape = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape  # to confirm the shape
         RL = DQN(action_n=env.action_space.n, state_n=env.observation_space.shape[0], env_shape=env_shape,
-                learning_rate=args.learning_rate, reward_decay=args.reward_decay, e_greedy=args.e_greedy)
+                learning_rate=args.learning_rate, reward_decay=args.reward_decay)
     else:
         print("Error method! Use DQN instead.")
         print('--------------------------------')
         env_shape = 0 if isinstance(env.action_space.sample(), int) else env.action_space.sample().shape  # to confirm the shape
         RL = DQN(action_n=env.action_space.n, state_n=env.observation_space.shape[0], env_shape=env_shape,
-                learning_rate=args.learning_rate, reward_decay=args.reward_decay, e_greedy=args.e_greedy)
+                learning_rate=args.learning_rate, reward_decay=args.reward_decay)
 
     update(method)
