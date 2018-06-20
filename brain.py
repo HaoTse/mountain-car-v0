@@ -6,6 +6,9 @@ import torch.nn.functional as F
 
 from config import BATCH_SIZE, TARGET_REPLACE_ITER, MEMORY_CAPACITY, E_GREEDY
 
+USE_CUDA = torch.cuda.is_available()
+device = torch.device("cuda" if USE_CUDA else "cpu")
+
 class RL(object):
     def __init__(self, action_space, learning_rate=0.01, reward_decay=0.9):
         self.actions = action_space  # a list
@@ -76,9 +79,9 @@ class SarsaTable(RL):
 class Net(nn.Module):
     def __init__(self, action_n, state_n):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(state_n, 50)
+        self.fc1 = nn.Linear(state_n, 50).to(device)
         self.fc1.weight.data.normal_(0, 0.1)   # initialization
-        self.out = nn.Linear(50, action_n)
+        self.out = nn.Linear(50, action_n).to(device)
         self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
@@ -105,10 +108,10 @@ class DQN(object):
         self.loss_func = nn.MSELoss()
 
     def choose_action(self, x):
-        x = torch.unsqueeze(torch.FloatTensor(x), 0)
+        x = torch.unsqueeze(torch.FloatTensor(x).to(device), 0)
         # input only one sample
         if np.random.uniform() < self.epsilon:  # greedy
-            actions_value = self.eval_net.forward(x)
+            actions_value = self.eval_net.forward(x).cpu()
             action = torch.max(actions_value, 1)[1].data.numpy()
             action = action[0] if self.env_shape == 0 else action.reshape(self.env_shape)
         else:  # random
@@ -132,10 +135,10 @@ class DQN(object):
         # sample batch transitions
         sample_index = np.random.choice(MEMORY_CAPACITY, BATCH_SIZE)
         b_memory = self.memory[sample_index, :]
-        b_s = torch.FloatTensor(b_memory[:, :self.state_n])
-        b_a = torch.LongTensor(b_memory[:, self.state_n:self.state_n+1].astype(int))
-        b_r = torch.FloatTensor(b_memory[:, self.state_n+1:self.state_n+2])
-        b_s_ = torch.FloatTensor(b_memory[:, -self.state_n:])
+        b_s = torch.FloatTensor(b_memory[:, :self.state_n]).to(device)
+        b_a = torch.LongTensor(b_memory[:, self.state_n:self.state_n+1].astype(int)).to(device)
+        b_r = torch.FloatTensor(b_memory[:, self.state_n+1:self.state_n+2]).to(device)
+        b_s_ = torch.FloatTensor(b_memory[:, -self.state_n:]).to(device)
 
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
